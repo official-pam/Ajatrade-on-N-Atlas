@@ -1,0 +1,200 @@
+{
+  "role_ask": {
+    "english": {
+      "file": "role_ask__english__f395e658.mp3",
+      "hash": "f395e658"
+    },
+    "hausa": {
+      "file": "role_ask__hausa__cb090c8b.mp3",
+      "hash": "cb090c8b"
+    },
+    "igbo": {
+      "file": "role_ask__igbo__4dc7da6c.mp3",
+      "hash": "4dc7da6c"
+    },
+    "pidgin": {
+      "file": "role_ask__pidgin__e5b59da4.mp3",
+      "hash": "e5b59da4"
+    },
+    "yoruba": {
+      "file": "role_ask__yoruba__38a3d017.mp3",
+      "hash": "38a3d017"
+    }
+  },
+  "service_menu_prompt": {
+    "english": {
+      "file": "service_menu_prompt__english__7e58498a.mp3",
+      "hash": "7e58498a"
+    },
+    "hausa": {
+      "file": "service_menu_prompt__hausa__55df7a13.mp3",
+      "hash": "55df7a13"
+    },
+    "igbo": {
+      "file": "service_menu_prompt__igbo__a512b84f.mp3",
+      "hash": "a512b84f"
+    },
+    "yoruba": {
+      "file": "service_menu_prompt__yoruba__73783e86.mp3",
+      "hash": "73783e86"
+    },
+    "pidgin": {
+      "file": "service_menu_prompt__pidgin__b018080b.mp3",
+      "hash": "b018080b"
+    }
+  },
+  "welcome_consent": {
+    "english": {
+      "file": "welcome_consent__english__e488332b.mp3",
+      "hash": "e488332b"
+    },
+    "hausa": {
+      "file": "welcome_consent__hausa__f7c87b15.mp3",
+      "hash": "f7c87b15"
+    },
+    "igbo": {
+      "file": "welcome_consent__igbo__198e8403.mp3",
+      "hash": "198e8403"
+    },
+    "pidgin": {
+      "file": "welcome_consent__pidgin__f4fdfe76.mp3",
+      "hash": "f4fdfe76"
+    },
+    "yoruba": {
+      "file": "welcome_consent__yoruba__d1710e05.mp3",
+      "hash": "d1710e05"
+    }
+  },
+  "consent_ack": {
+    "english": {
+      "file": "consent_ack__english__0e05b280.mp3",
+      "hash": "0e05b280"
+    },
+    "hausa": {
+      "file": "consent_ack__hausa__0e05b280.mp3",
+      "hash": "0e05b280"
+    },
+    "igbo": {
+      "file": "consent_ack__igbo__0e05b280.mp3",
+      "hash": "0e05b280"
+    },
+    "yoruba": {
+      "file": "consent_ack__yoruba__0e05b280.mp3",
+      "hash": "0e05b280"
+    },
+    "pidgin": {
+      "file": "consent_ack__pidgin__0e05b280.mp3",
+      "hash": "0e05b280"
+    }
+  },
+  "goodbye": {
+    "english": {
+      "file": "goodbye__english__54e3423c.mp3",
+      "hash": "54e3423c"
+    },
+    "hausa": {
+      "file": "goodbye__hausa__1b1aa68a.mp3",
+      "hash": "1b1aa68a"
+    },
+    "igbo": {
+      "file": "goodbye__igbo__f2d9a9f4.mp3",
+      "hash": "f2d9a9f4"
+    },
+    "yoruba": {
+      "file": "goodbye__yoruba__d9836cf6.mp3",
+      "hash": "d9836cf6"
+    },
+    "pidgin": {
+      "file": "goodbye__pidgin__06bb336e.mp3",
+      "hash": "06bb336e"
+    }
+  },
+  "privacy_notice": {
+    "english": {
+      "file": "privacy_notice__english__0973379b.mp3",
+      "hash": "0973379b"
+    },
+    "hausa": {
+      "file": "privacy_notice__hausa__0973379b.mp3",
+      "hash": "0973379b"
+    },
+    "igbo": {
+      "file": "privacy_notice__igbo__0973379b.mp3",
+      "hash": "0973379b"
+    },
+    "yoruba": {
+      "file": "privacy_notice__yoruba__0973379b.mp3",
+      "hash": "0973379b"
+    },
+    "pidgin": {
+      "file": "privacy_notice__pidgin__0973379b.mp3",
+      "hash": "0973379b"
+    }
+  },
+  "diagnosis_prompt": {
+    "english": {
+      "file": "diagnosis_prompt__english__fe246d03.mp3",
+      "hash": "fe246d03"
+    },
+    "hausa": {
+      "file": "diagnosis_prompt__hausa__1370fa4f.mp3",
+      "hash": "1370fa4f"
+    },
+    "igbo": {
+      "file": "diagnosis_prompt__igbo__45adcf38.mp3",
+      "hash": "45adcf38"
+    },
+    "yoruba": {
+      "file": "diagnosis_prompt__yoruba__abb37de6.mp3",
+      "hash": "abb37de6"
+    },
+    "pidgin": {
+      "file": "diagnosis_prompt__pidgin__04991e65.mp3",
+      "hash": "04991e65"
+    }
+  },
+  "please_wait": {
+    "english": {
+      "file": "please_wait__english__e5380de8.mp3",
+      "hash": "e5380de8"
+    },
+    "hausa": {
+      "file": "please_wait__hausa__b77b4c88.mp3",
+      "hash": "b77b4c88"
+    },
+    "igbo": {
+      "file": "please_wait__igbo__3ea3d8bb.mp3",
+      "hash": "3ea3d8bb"
+    },
+    "yoruba": {
+      "file": "please_wait__yoruba__b25ee9fc.mp3",
+      "hash": "b25ee9fc"
+    },
+    "pidgin": {
+      "file": "please_wait__pidgin__1bb1c19f.mp3",
+      "hash": "1bb1c19f"
+    }
+  },
+  "feature_coming_soon": {
+    "english": {
+      "file": "feature_coming_soon__english__20b9ab95.mp3",
+      "hash": "20b9ab95"
+    },
+    "hausa": {
+      "file": "feature_coming_soon__hausa__b82dc493.mp3",
+      "hash": "b82dc493"
+    },
+    "igbo": {
+      "file": "feature_coming_soon__igbo__9eb66dab.mp3",
+      "hash": "9eb66dab"
+    },
+    "yoruba": {
+      "file": "feature_coming_soon__yoruba__b41a69d4.mp3",
+      "hash": "b41a69d4"
+    },
+    "pidgin": {
+      "file": "feature_coming_soon__pidgin__3abe04b0.mp3",
+      "hash": "3abe04b0"
+    }
+  }
+}
