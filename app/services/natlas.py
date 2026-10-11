@@ -68,8 +68,13 @@ def _asr_url() -> str:
 
 
 def _headers() -> dict[str, str]:
+    # The ngrok header skips ngrok's free-plan browser warning page; other
+    # hosts ignore it.
+    headers = {"ngrok-skip-browser-warning": "1", "User-Agent": "AjaTrade/1.0"}
     key = os.getenv("NATLAS_API_KEY", "").strip()
-    return {"Authorization": f"Bearer {key}"} if key else {}
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    return headers
 
 
 def _timeout() -> float:

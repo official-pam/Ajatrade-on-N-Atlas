@@ -1,21 +1,30 @@
 """Run the N-ATLAS server from a free Kaggle or Colab GPU notebook.
 
-Free option for demos and testing. The notebook session ends after some hours
-of use, so for the real-user validation period prefer a Hugging Face Space or
-RunPod (see natlas_server/README.md).
+Free, no card needed. A Kaggle session lasts at most 12 hours (about 30 GPU
+hours a week), so restart it when it stops.
 
-In a notebook cell (GPU on, internet on):
+Kaggle secrets (Add-ons -> Secrets): HF_TOKEN, NATLAS_SERVER_KEY, and for a
+fixed address NGROK_AUTHTOKEN and NGROK_DOMAIN (free ngrok account ->
+Domains). Then in notebook cells (GPU T4 x2, Internet on):
 
-    !git clone https://github.com/Seun-Agba-coder/AjaTrade.git
-    %cd AjaTrade/natlas_server
+    !git clone https://github.com/official-pam/Ajatrade-on-N-Atlas.git
+    %cd Ajatrade-on-N-Atlas/natlas_server
+
     import os
-    os.environ["HF_TOKEN"] = "hf_..."             # account that accepted the terms
-    os.environ["NATLAS_SERVER_KEY"] = "pick-a-long-random-secret"
-    os.environ["NATLAS_LOAD_IN_4BIT"] = "1"        # T4 has 16 GB
+    from kaggle_secrets import UserSecretsClient
+    s = UserSecretsClient()
+    for name in ("HF_TOKEN", "NATLAS_SERVER_KEY", "NGROK_AUTHTOKEN", "NGROK_DOMAIN"):
+        try:
+            os.environ[name] = s.get_secret(name)
+        except Exception:
+            pass
+    os.environ["NATLAS_LOAD_IN_4BIT"] = "1"
+
     !python run_in_notebook.py
 
-It installs the server, starts it, opens a Cloudflare quick tunnel and prints
-the public URL. Put that URL in the bot's NATLAS_BASE_URL.
+It installs the server, loads the models and prints the public URL to put in
+the bot's NATLAS_BASE_URL. With the ngrok secrets the URL is the same every
+session; without them a random trycloudflare.com URL is printed each time.
 """
 
 from __future__ import annotations
@@ -32,6 +41,31 @@ CLOUDFLARED = "/tmp/cloudflared"
 CLOUDFLARED_URL = (
     "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
 )
+NGROK = "/tmp/ngrok"
+NGROK_URL = "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz"
+
+
+def announce(url: str) -> None:
+    print("\n" + "=" * 60)
+    print("NATLAS_BASE_URL =", url)
+    print("=" * 60 + "\nKeep this cell running.")
+
+
+def start_ngrok(token: str, domain: str) -> subprocess.Popen | None:
+    """Fixed address on the free ngrok plan (one free static domain)."""
+    domain = domain.removeprefix("https://").removeprefix("http://").strip("/")
+    if not os.path.exists(NGROK):
+        urllib.request.urlretrieve(NGROK_URL, "/tmp/ngrok.tgz")
+        subprocess.run(["tar", "-xzf", "/tmp/ngrok.tgz", "-C", "/tmp"], check=True)
+    subprocess.run([NGROK, "config", "add-authtoken", token], check=True, capture_output=True)
+    for flag in (f"--url=https://{domain}", f"--domain={domain}"):
+        tunnel = subprocess.Popen([NGROK, "http", str(PORT), flag, "--log=stdout"], stdout=subprocess.DEVNULL)
+        time.sleep(6)
+        if tunnel.poll() is None:
+            announce(f"https://{domain}")
+            return tunnel
+    print("ngrok did not start (check NGROK_AUTHTOKEN / NGROK_DOMAIN); using a temporary address instead.")
+    return None
 
 
 def main() -> None:
@@ -57,6 +91,11 @@ def main() -> None:
         except Exception:
             time.sleep(10)
 
+    token, domain = os.getenv("NGROK_AUTHTOKEN", ""), os.getenv("NGROK_DOMAIN", "")
+    if token and domain and start_ngrok(token, domain):
+        server.wait()
+        return
+
     if not os.path.exists(CLOUDFLARED):
         urllib.request.urlretrieve(CLOUDFLARED_URL, CLOUDFLARED)
         os.chmod(CLOUDFLARED, 0o755)
@@ -69,9 +108,7 @@ def main() -> None:
     for line in tunnel.stdout:  # type: ignore[union-attr]
         match = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", line)
         if match:
-            print("\n" + "=" * 60)
-            print("NATLAS_BASE_URL =", match.group(0))
-            print("=" * 60 + "\nKeep this cell running.")
+            announce(match.group(0))
             break
     server.wait()
 
