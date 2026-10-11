@@ -67,13 +67,30 @@ def mask_phone(phone: str | None) -> str:
 
 
 def to_async_url(url: str) -> str:
-    """Return a SQLAlchemy async (asyncpg) URL for a plain Postgres URL."""
+    """Return a SQLAlchemy async (asyncpg) URL for a plain Postgres URL.
+
+    Hosted Postgres (Neon, Supabase, Railway) hands out libpq-style URLs with
+    ``sslmode`` and ``channel_binding``, which asyncpg rejects. ``sslmode``
+    becomes asyncpg's ``ssl`` and ``channel_binding`` is dropped.
+    """
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
     url = (url or "").strip()
     if url.startswith("postgres://"):
-        return "postgresql+asyncpg://" + url[len("postgres://"):]
-    if url.startswith("postgresql://"):
-        return "postgresql+asyncpg://" + url[len("postgresql://"):]
-    return url
+        url = "postgresql+asyncpg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+    if not url.startswith("postgresql+asyncpg://") or "?" not in url:
+        return url
+    parts = urlsplit(url)
+    query = []
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        if key == "channel_binding":
+            continue
+        if key == "sslmode":
+            key = "ssl"
+        query.append((key, value))
+    return urlunsplit(parts._replace(query=urlencode(query, safe="/:")))
 
 
 def _row_to_user(row: UserRow) -> User:

@@ -27,17 +27,16 @@ if config.config_file_name is not None:
 
 def _database_url() -> str:
     """Return the SQLAlchemy async URL for DATABASE_URL."""
-    url = os.getenv("DATABASE_URL", "").strip()
-    if url.startswith("postgres://"):
-        url = "postgresql+asyncpg://" + url[len("postgres://"):]
-    elif url.startswith("postgresql://"):
-        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
-    return url
+    from app.storage.postgres import to_async_url
+
+    return to_async_url(os.getenv("DATABASE_URL", ""))
 
 
 _database_url_value = _database_url()
 if _database_url_value:
-    config.set_main_option("sqlalchemy.url", _database_url_value)
+    # "%" must be doubled: Alembic config values use %-interpolation, and
+    # passwords or encoded characters in the URL can contain "%".
+    config.set_main_option("sqlalchemy.url", _database_url_value.replace("%", "%%"))
 
 # The SQLAlchemy models are the source of truth for the schema. Migrations
 # stay additive only; use ``alembic revision --autogenerate`` to draft new ones.
