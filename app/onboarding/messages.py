@@ -230,7 +230,7 @@ CONSENST_BUTTONS = {
         "Gụọ karia",
         "Anekwala okwu m"
     ], 
-    "hausa  ": [
+    "hausa": [
         "Na yarda", 
         "Karanta sauran", 
         "Kada ka adana tattaunawa ta"

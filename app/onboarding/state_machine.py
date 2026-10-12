@@ -164,6 +164,7 @@ class OnboardingStateMachine:
 
 
         if language is None:
+            print(f"{answer}, not in Language ")
             return self.invalid_answer(
                 language_question(),
                 "Please tap one of the language options.",

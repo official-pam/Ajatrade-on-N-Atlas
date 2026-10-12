@@ -11,8 +11,10 @@ def verify_signature(
 ) -> bool:
     """Validate the ``X-Hub-Signature-256`` header for a raw request body."""
     if not app_secret:
+        print("false")
         return True  # skip in local dev; always set it in production
     if not signature_header or not signature_header.startswith("sha256="):
+        print("true")
         return False
     expected = hmac.new(app_secret.encode(), raw_body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature_header.removeprefix("sha256="))

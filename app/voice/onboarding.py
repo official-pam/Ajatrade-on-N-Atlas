@@ -150,6 +150,8 @@ class VoiceOnboarding:
         try:
             audio_bytes, mime_type = await fetch_voice_note(media_id)
             transcript = await transcribe_voice_note(audio_bytes, mime_type)
+            # if not transcript:
+            #     return {"stautus": "Not transcript"}
         except Exception as error:  # noqa: BLE001 - never silence the user
             logger.error(
                 "Voice note %s could not be transcribed for %s: %s",

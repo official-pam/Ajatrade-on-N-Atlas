@@ -100,14 +100,13 @@ async def receive_webhook(
 ) -> dict[str, str]:
     """Accept a webhook delivery, then process it out-of-band."""
     raw_body = await request.body()
-
     if not verify_signature(
         raw_body,
         request.headers.get("X-Hub-Signature-256"),
         settings.whatsapp_app_secret,
     ):
         raise HTTPException(status_code=403, detail="Invalid signature")
-
+    logger.info("here")
     payload_json = await request.json()
     value = payload_json["entry"][0]["changes"][0]["value"]
 

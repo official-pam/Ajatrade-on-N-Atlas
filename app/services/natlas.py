@@ -64,14 +64,17 @@ def _base_url() -> str:
 
 
 def _asr_url() -> str:
-    return (os.getenv("NATLAS_ASR_URL", "").strip().rstrip("/") or _base_url())
+    # os.getenv("NATLAS_ASR_URL", "").strip().rstrip("/") or
+    return (_base_url())
 
 
 def _headers() -> dict[str, str]:
     # The ngrok header skips ngrok's free-plan browser warning page; other
     # hosts ignore it.
-    headers = {"ngrok-skip-browser-warning": "1", "User-Agent": "AjaTrade/1.0"}
+    # headers = {"ngrok-skip-browser-warning": "1", "User-Agent": "AjaTrade/1.0"}
+    headers = {}
     key = os.getenv("NATLAS_API_KEY", "").strip()
+    print("KEY: ", key)
     if key:
         headers["Authorization"] = f"Bearer {key}"
     return headers
@@ -163,6 +166,7 @@ async def chat(
 @_one_retry
 async def _post_asr(audio_bytes: bytes, mime_type: str, language: str, timeout: float) -> dict[str, Any]:
     extension = mime_type.rsplit("/", 1)[-1].split(";")[0] or "ogg"
+    print("Extention: : ", extension)
     async with httpx.AsyncClient(timeout=timeout) as client:
         response = await client.post(
             f"{_asr_url()}/asr",
@@ -170,6 +174,7 @@ async def _post_asr(audio_bytes: bytes, mime_type: str, language: str, timeout: 
             data={"language": language},
             headers=_headers(),
         )
+        print("Response: : ", response)
         response.raise_for_status()
         return response.json()
 
@@ -190,5 +195,6 @@ async def transcribe(
         lang = None
     data = await _post_asr(audio_bytes, mime_type, lang or "auto", _timeout())
     text = str(data.get("text") or "").strip()
+    print("TEXT: : ", text)
     detected = normalize_language(data.get("language")) if data.get("language") else lang
     return Transcript(text=text, language=detected, model=data.get("model"))

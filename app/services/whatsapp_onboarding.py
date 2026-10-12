@@ -80,7 +80,6 @@ class WhatsAppService:
                 headers=headers,
                 json=payload,
             )
-
             if response.is_error:
                 parsed = _parse_whatsapp_error(response.json()) if response.json() else {}
                 logger.error(

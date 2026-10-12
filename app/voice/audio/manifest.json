@@ -21,26 +21,26 @@
       "hash": "38a3d017"
     }
   },
-  "service_menu_prompt": {
+   "service_menu_prompt": {
     "english": {
-      "file": "service_menu_prompt__english__7e58498a.mp3",
-      "hash": "7e58498a"
+      "file": "service_menu_prompt__english__43ac3880.mp3",
+      "hash": "43ac3880"
     },
     "hausa": {
-      "file": "service_menu_prompt__hausa__55df7a13.mp3",
-      "hash": "55df7a13"
+      "file": "service_menu_prompt__hausa__50bbb393.mp3",
+      "hash": "50bbb393"
     },
     "igbo": {
-      "file": "service_menu_prompt__igbo__a512b84f.mp3",
-      "hash": "a512b84f"
+      "file": "service_menu_prompt__igbo__40dc1b46.mp3",
+      "hash": "40dc1b46"
     },
     "yoruba": {
-      "file": "service_menu_prompt__yoruba__73783e86.mp3",
-      "hash": "73783e86"
+      "file": "service_menu_prompt__yoruba__88ba3135.mp3",
+      "hash": "88ba3135"
     },
     "pidgin": {
-      "file": "service_menu_prompt__pidgin__b018080b.mp3",
-      "hash": "b018080b"
+      "file": "service_menu_prompt__pidgin__618cc702.mp3",
+      "hash": "618cc702"
     }
   },
   "welcome_consent": {
