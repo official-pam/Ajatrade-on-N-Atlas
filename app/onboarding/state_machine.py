@@ -45,9 +45,10 @@ OPEN_FLOWS = (
     "weed_control",
     "variety_choice",
     "germination",
+    "trade",
 )
 # Menu rows handled by the farm-advice engine in the main pipeline.
-ADVISOR_MENU_IDS = OPEN_FLOWS[3:]
+ADVISOR_MENU_IDS = OPEN_FLOWS[3:10]
 
 
 def _script_text(script_id: str, language: str | None) -> str:
@@ -108,7 +109,7 @@ class OnboardingStateMachine:
             user.flow_data = {}
             user.current_case_id = None
             await self.storage.save_user(user)
-            return service_menu(user.language, name=user.preferred_name or user.name)
+            return service_menu(user.language, name=user.preferred_name or user.name, role=user.role)
 
         # Global restart command.
         if answer in {"menu", "start over"}:
@@ -231,7 +232,7 @@ class OnboardingStateMachine:
         #     "Thanks! The main AjaTrade assistant pipeline will handle "
         #     "your message here.") , 
 
-        return [service_menu(user.language, name=user.preferred_name or user.name)]
+        return [service_menu(user.language, name=user.preferred_name or user.name, role=user.role)]
     async def handle_declined(self, user: User, answer: str | None):
         language = user.language or "en"
 

@@ -30,7 +30,7 @@ from app.services.diagnoses.disease_detection import diagnose
 from app.services.diagnoses.reply import build_reply
 from app.services.languages import normalize_language
 from app.services.text_to_speech import text_to_speech
-from app.services.whatsapp.send_media import send_text, send_voice_note
+from app.services.whatsapp.send_media import send_document, send_text, send_voice_note
 from app.storage import StorageUnavailableError, mask_phone, storage
 from app.services.brain import (
     RoutedReply,
@@ -89,11 +89,16 @@ async def _save_inbound(
     )
 
 
-def _menu_payload(language: str | None, name: str | None) -> dict[str, Any]:
-    """Service menu list message. Fallback to English when language unknown."""
+def _menu_payload(
+    language: str | None,
+    name: str | None,
+    role: str | None = None,
+    kind: str | None = None,
+) -> dict[str, Any]:
+    """Service menu list message (farm or trader). English when language unknown."""
     try:
         from app.onboarding.messages import service_menu
-        return service_menu(language or "english", name=name)
+        return service_menu(language or "english", name=name, role=role, kind=kind)
     except Exception as error:
         logger.warning("Could not build service menu: %s", error)
         return {
@@ -319,6 +324,10 @@ async def _menu_choice(user, choice_id: str, title: str) -> RoutedReply:
 
     if choice_id in ADVISOR_MENU_IDS:
         return await advisor.start_flow(user, choice_id)
+    from app.trade import flow as trade_flow
+
+    if choice_id in trade_flow.CHOICES:
+        return await trade_flow.handle_choice(user, choice_id)
     if choice_id == "crop_detection":
         try:
             await storage.close_case(user.phone)
@@ -487,12 +496,24 @@ async def _send_routed_reply(
                 sent,
             )
 
+        elif kind == "document":
+            doc = msg.get("document") or {}
+            sent = await send_document(
+                phone,
+                doc.get("bytes") or b"",
+                doc.get("filename") or "document.pdf",
+                caption=doc.get("caption"),
+                mime_type=doc.get("mime_type") or "application/pdf",
+            )
+            logger.info("Sent document to %s: success=%s", mask_phone(phone), sent)
+
         else:
             logger.warning("Unhandled routed message type: %s", kind)
 
     if reply.show_menu:
         name = getattr(user, "preferred_name", None) or getattr(user, "name", None)
-        sent = await _send_interactive(phone, _menu_payload(language, name))
+        menu = _menu_payload(language, name, role=getattr(user, "role", None), kind=getattr(reply, "menu", None))
+        sent = await _send_interactive(phone, menu)
         logger.info("Sent service menu to %s: success=%s", mask_phone(phone), sent)
 
 
