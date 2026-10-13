@@ -41,3 +41,9 @@ pytest
 Environment variables are listed in `SPEC.md` section 1. The N-ATLAS server is set up as described in `natlas_server/README.md`.
 
 Powered by Awarri (N-ATLaS).
+
+## How to use
+- Send a voice note to our whatsapp number, in your local dialect +234 902 661 1474. (it would automatically detect if it falls under the langugagea we support)
+- Go through the onboarding (in order to understand how our bot can be of benefit to you).
+- Register as either a trader of manufacuter.
+- Ask our bot any questions about your farmland via voice not and get a response back in your choosen dialect.
