@@ -408,6 +408,7 @@ class RoutedReply:
     close_case: bool = False
     new_flow: str | None = None  # if we switched flow mid-case
     show_menu: bool = False  # also send the tappable service menu
+    menu: str | None = None  # "farm" or "trade"; None picks by the user's role
 
 
 async def route_message(
@@ -424,6 +425,7 @@ async def route_message(
     handle_message, except inside a farm-advice flow that takes photos.
     """
     from app.services.advisor import engine as advisor
+    from app.trade import flow as trade_flow
 
     try:
         await storage.set_user_last_activity(user.phone)
@@ -433,6 +435,12 @@ async def route_message(
     # 0. An open farm-advice flow owns the message unless it hands it back.
     if advisor.is_advisor_flow(user.flow):
         reply = await advisor.continue_flow(user, english_text, location=location)
+        if reply is not None:
+            return reply
+
+    # 0b. An open trader-ledger action (sale, restock, read-back) likewise.
+    if trade_flow.is_trade_flow(user.flow):
+        reply = await trade_flow.continue_flow(user, english_text)
         if reply is not None:
             return reply
 
@@ -465,6 +473,11 @@ async def route_message(
         text = "Thank you, I saved your farm location. What would you like help with?"
         return RoutedReply(messages=[_voice_payload(text, user.language)], english_text=text, show_menu=True)
 
+    # Ledger messages ("I sold 3 bags of rice at 52,000 each", "today's
+    # profit") go to the trader ledger before intent classification.
+    if english_text and user_flow != UserFlow.CROP_DETECTION and trade_flow.looks_like_trade(english_text, user):
+        return await trade_flow.start(user, english_text)
+
     # No open flow: classify intent.
     intent = await classify_intent(english_text)
     logger.info("Intent for %s: %s", mask_phone(user.phone), intent)
@@ -485,6 +498,11 @@ async def route_message(
             "weeds, choosing seed, and seed germination. Please choose from the menu, "
             "or tell me your farm problem."
         )
+        if trade_flow.is_trader(user):
+            text = (
+                "I keep your sales book. Tell me what you sold or what stock you added, "
+                "or ask for today's profit. You can also choose from the menu."
+            )
         return RoutedReply(
             messages=[_voice_payload(text, user.language)],
             english_text=text,

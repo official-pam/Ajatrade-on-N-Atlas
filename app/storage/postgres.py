@@ -15,7 +15,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Awaitable, Callable, Optional, TypeVar
+from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypeVar
 
 from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -28,6 +28,9 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.schemas.chat import ChatMessage
+
+if TYPE_CHECKING:
+    from app.trade.ledger import Entry, Product
 from app.schemas.memory import User
 from app.storage.models import (
     Base,
@@ -35,6 +38,8 @@ from app.storage.models import (
     DiagnosisLogRow,
     MessageRow,
     ProcessedMessageRow,
+    TradeEntryRow,
+    TradeProductRow,
     UserRow,
     OpenCase,
 )
@@ -121,6 +126,45 @@ def _row_to_user(row: UserRow) -> User:
         diagnoses_in_case=row.diagnoses_in_case,
         flow_data=dict(row.flow_data or {}),
         farm_profile=dict(row.farm_profile or {}),
+    )
+
+
+def _row_to_product(row: TradeProductRow) -> "Product":
+    from decimal import Decimal
+
+    from app.trade.ledger import Product
+
+    return Product(
+        id=row.id,
+        name=row.name,
+        unit=row.unit,
+        cost_price=Decimal(row.cost_price),
+        set_price=Decimal(row.set_price),
+        stock_qty=Decimal(row.stock_qty),
+        low_stock_level=Decimal(row.low_stock_level),
+    )
+
+
+def _row_to_entry(row: TradeEntryRow) -> "Entry":
+    from decimal import Decimal
+
+    from app.trade.ledger import Entry
+
+    return Entry(
+        kind=row.kind,
+        product_name=row.product_name,
+        qty=Decimal(row.qty),
+        unit_price=Decimal(row.unit_price),
+        unit_cost=Decimal(row.unit_cost),
+        set_price=Decimal(row.set_price),
+        amount=Decimal(row.amount),
+        profit=Decimal(row.profit),
+        price_difference=Decimal(row.price_difference),
+        stock_after=Decimal(row.stock_after),
+        unit=row.unit,
+        product_id=row.product_id,
+        created_at=row.created_at,
+        source=row.source,
     )
 
 
@@ -502,6 +546,102 @@ class PostgresStorage:
         user.diagnoses_in_case = 0
         user.flow_data = {}
         await self.save_user(user)
+
+
+    # ------------------------------------------------------------------
+    # Trader ledger (consented users only; the trade flow checks consent)
+    # ------------------------------------------------------------------
+
+    async def trade_products(self, wa_id: str) -> list["Product"]:
+        """The trader's catalogue, by name."""
+
+        async def operation(session: AsyncSession) -> list[Product]:
+            result = await session.execute(
+                select(TradeProductRow)
+                .where(TradeProductRow.wa_id == wa_id)
+                .order_by(TradeProductRow.name)
+            )
+            return [_row_to_product(row) for row in result.scalars()]
+
+        return await self._execute(operation)
+
+    async def trade_apply(self, wa_id: str, product: "Product", entry: "Entry") -> "Entry":
+        """Save the product's new state and its ledger line in one transaction.
+
+        A new product (``product.id is None``) is inserted, or merged into an
+        existing row with the same normalised name.
+        """
+        from app.trade.parse import product_key
+
+        async def operation(session: AsyncSession) -> Entry:
+            key = product_key(product.name)
+            row = None
+            if product.id is not None:
+                row = await session.get(TradeProductRow, product.id, with_for_update=True)
+                if row is not None and row.wa_id != wa_id:
+                    row = None
+            if row is None:
+                result = await session.execute(
+                    select(TradeProductRow)
+                    .where(TradeProductRow.wa_id == wa_id, TradeProductRow.name_key == key)
+                    .with_for_update()
+                )
+                row = result.scalar_one_or_none()
+                if row is not None and product.id is None:
+                    # Worked out as a new item, but the item exists: saving
+                    # would overwrite its stock and prices. Refuse instead.
+                    raise ValueError(f"item {product.name!r} already exists")
+            if row is None:
+                row = TradeProductRow(wa_id=wa_id, name=product.name, name_key=key)
+                session.add(row)
+            row.unit = product.unit
+            row.cost_price = product.cost_price
+            row.set_price = product.set_price
+            row.stock_qty = product.stock_qty
+            row.low_stock_level = product.low_stock_level
+            row.updated_at = datetime.now(timezone.utc)
+            await session.flush()
+            created = datetime.now(timezone.utc)
+            line = TradeEntryRow(
+                created_at=created,
+                wa_id=wa_id,
+                product_id=row.id,
+                product_name=entry.product_name,
+                unit=entry.unit,
+                kind=entry.kind,
+                qty=entry.qty,
+                unit_price=entry.unit_price,
+                unit_cost=entry.unit_cost,
+                set_price=entry.set_price,
+                amount=entry.amount,
+                profit=entry.profit,
+                price_difference=entry.price_difference,
+                stock_after=entry.stock_after,
+                source=entry.source,
+            )
+            session.add(line)
+            await session.commit()
+            entry.product_id = row.id
+            entry.created_at = created
+            return entry
+
+        return await self._execute(operation)
+
+    async def trade_entries(
+        self, wa_id: str, start: datetime | None = None, end: datetime | None = None
+    ) -> list["Entry"]:
+        """Ledger lines between ``start`` and ``end`` (UTC), oldest first."""
+
+        async def operation(session: AsyncSession) -> list[Entry]:
+            query = select(TradeEntryRow).where(TradeEntryRow.wa_id == wa_id)
+            if start is not None:
+                query = query.where(TradeEntryRow.created_at >= start)
+            if end is not None:
+                query = query.where(TradeEntryRow.created_at < end)
+            result = await session.execute(query.order_by(TradeEntryRow.created_at, TradeEntryRow.id))
+            return [_row_to_entry(row) for row in result.scalars()]
+
+        return await self._execute(operation)
 
 
 storage = PostgresStorage()

@@ -475,10 +475,114 @@ SERVICE_MENU_MESSAGES =  {
     }
   }
 
-def service_menu(language: str = "english", name: str | None = None) -> dict:
+# The trader menu: shown to users whose role is trader or manufacturer, or
+# when anyone says "my shop". Rows are handled by app/trade/flow.py.
+# REVIEW: native speakers to check the Hausa, Igbo, Yoruba and Pidgin rows.
+TRADER_MENU_MESSAGES = {
+    "english": {
+      "greeting": "Hello {name}, I am AjaTrade, your sales book. What would you like to do?",
+      "greeting_no_name": "Hello, I am AjaTrade, your sales book. What would you like to do?",
+      "button": "See options",
+      "section": "My shop",
+      "rows": [
+        ["trade_sale", "Record a sale", "Say what you sold and the price"],
+        ["trade_add", "Add or restock goods", "Item, how many, cost and selling price"],
+        ["trade_stock", "My goods and stock", "What is left and your prices"],
+        ["trade_today", "Today's profit", "Sales, profit and discounts today"],
+        ["trade_week", "This week's profit", "Sales and profit since Monday"],
+        ["trade_export", "Record for a loan", "Get your sales record as a PDF"],
+        ["trade_help", "How it works", "What I can do for your shop"],
+        ["farm_menu", "Farm services", "Crop problems, soil, fertilizer"],
+      ]
+    },
+    "hausa": {
+      "greeting": "Sannu {name}, ni ne AjaTrade, littafin cinikinka. Me kake so ka yi?",
+      "greeting_no_name": "Sannu, ni ne AjaTrade, littafin cinikinka. Me kake so ka yi?",
+      "button": "Duba zabi",
+      "section": "Shagona",
+      "rows": [
+        ["trade_sale", "Rubuta ciniki", "Faɗi abin da ka sayar da farashi"],
+        ["trade_add", "Ƙara kaya", "Kaya, yawa, kuɗin saye da na sayarwa"],
+        ["trade_stock", "Kayana da yawansu", "Abin da ya rage da farashinka"],
+        ["trade_today", "Ribar yau", "Ciniki, riba da rangwame na yau"],
+        ["trade_week", "Ribar wannan mako", "Ciniki da riba tun Litinin"],
+        ["trade_export", "Bayani don lamuni", "Samu bayanan cinikinka a PDF"],
+        ["trade_help", "Yadda yake aiki", "Abin da zan iya yi wa shagonka"],
+        ["farm_menu", "Ayyukan gona", "Matsalar shuka, ƙasa, taki"],
+      ]
+    },
+    "igbo": {
+      "greeting": "Ndewo {name}, abụ m AjaTrade, akwụkwọ ahịa gị. Gịnị ka ị chọrọ ime?",
+      "greeting_no_name": "Ndewo, abụ m AjaTrade, akwụkwọ ahịa gị. Gịnị ka ị chọrọ ime?",
+      "button": "Hụ nhọrọ",
+      "section": "Ụlọ ahịa m",
+      "rows": [
+        ["trade_sale", "Dee ihe m rere", "Kwuo ihe ị rere na ọnụ ahịa"],
+        ["trade_add", "Tinye ngwa ahịa", "Ngwa, ole, ego ịzụ na ego ire"],
+        ["trade_stock", "Ngwa ahịa m", "Ihe fọdụrụ na ọnụ ahịa gị"],
+        ["trade_today", "Uru taa", "Ahịa, uru na mbelata taa"],
+        ["trade_week", "Uru izu a", "Ahịa na uru kemgbe Mọnde"],
+        ["trade_export", "Ndekọ maka mbinye ego", "Nweta ndekọ ahịa gị dịka PDF"],
+        ["trade_help", "Otu o si arụ ọrụ", "Ihe m nwere ike ime maka gị"],
+        ["farm_menu", "Ọrụ ugbo", "Nsogbu akụkụ, ala, fatịlaịza"],
+      ]
+    },
+    "pidgin": {
+      "greeting": "Hello {name}, I be AjaTrade, your sales book. Wetin you wan do?",
+      "greeting_no_name": "Hello, I be AjaTrade, your sales book. Wetin you wan do?",
+      "button": "Check options",
+      "section": "My shop",
+      "rows": [
+        ["trade_sale", "Write down sale", "Talk wetin you sell and the price"],
+        ["trade_add", "Add new goods", "Item, how many, cost and sell price"],
+        ["trade_stock", "My goods", "Wetin remain and your prices"],
+        ["trade_today", "Today profit", "Sales, profit and discount today"],
+        ["trade_week", "This week profit", "Sales and profit since Monday"],
+        ["trade_export", "Record for loan", "Collect your sales record as PDF"],
+        ["trade_help", "How e dey work", "Wetin I fit do for your shop"],
+        ["farm_menu", "Farm services", "Crop problem, soil, fertilizer"],
+      ]
+    },
+    "yoruba": {
+      "greeting": "Pẹlẹ o {name}, emi ni AjaTrade, ìwé ọjà rẹ. Kí ni o fẹ́ ṣe?",
+      "greeting_no_name": "Pẹlẹ o, emi ni AjaTrade, ìwé ọjà rẹ. Kí ni o fẹ́ ṣe?",
+      "button": "Wo àwọn aṣàyàn",
+      "section": "Ṣọ́ọ̀bù mi",
+      "rows": [
+        ["trade_sale", "Kọ ọjà tí mo tà", "Sọ ohun tí o tà àti iye owó"],
+        ["trade_add", "Fi ọjà kún un", "Ọjà, iye, owó rírà àti owó títà"],
+        ["trade_stock", "Àwọn ọjà mi", "Ohun tó kù àti iye owó rẹ"],
+        ["trade_today", "Èrè t'òní", "Ọjà, èrè àti ẹ̀dínwó t'òní"],
+        ["trade_week", "Èrè ọ̀sẹ̀ yìí", "Ọjà àti èrè láti Ọjọ́ Ajé"],
+        ["trade_export", "Àkọsílẹ̀ fún owó yíyá", "Gba àkọsílẹ̀ ọjà rẹ ní PDF"],
+        ["trade_help", "Bí ó ṣe ń ṣiṣẹ́", "Ohun tí mo lè ṣe fún ṣọ́ọ̀bù rẹ"],
+        ["farm_menu", "Iṣẹ́ oko", "Ìṣòro irúgbìn, ilẹ̀, ajílẹ̀"],
+      ]
+    }
+  }
+
+TRADER_ROLES = ("trader", "manufacturer")
+
+
+def menu_kind_for(role: str | None, kind: str | None = None) -> str:
+    """Which menu to show: an explicit kind, else by role."""
+    if kind in ("farm", "trade"):
+        return kind
+    return "trade" if (role or "").lower() in TRADER_ROLES else "farm"
+
+
+def service_menu(
+    language: str = "english",
+    name: str | None = None,
+    role: str | None = None,
+    kind: str | None = None,
+) -> dict:
+    """The tappable service menu: the farm menu, or the trader menu for
+    traders and manufacturers (or when ``kind`` asks for one)."""
     from app.services.languages import normalize_language
 
-    msgs = SERVICE_MENU_MESSAGES.get(normalize_language(language), SERVICE_MENU_MESSAGES["english"])
+    table = TRADER_MENU_MESSAGES if menu_kind_for(role, kind) == "trade" else SERVICE_MENU_MESSAGES
+    msgs = table.get(normalize_language(language), table["english"])
     body = (
         msgs["greeting"].format(name=name)
         if name

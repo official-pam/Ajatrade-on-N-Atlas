@@ -17,6 +17,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     BigInteger,
+    Numeric,
     DateTime,
     ForeignKey,
     Index,
@@ -91,7 +92,10 @@ class UserFlow:
         VARIETY_CHOICE,
         GERMINATION,
     )
-    ALL = (CROP_DETECTION, MARKET_PRICE, CONNECT_VENDOR, *ADVISOR)
+    # Trader ledger (sales, restocks, summaries, lender statement).
+    TRADE = "trade"
+
+    ALL = (CROP_DETECTION, MARKET_PRICE, CONNECT_VENDOR, *ADVISOR, TRADE)
 
 
 class UserStep:
@@ -339,5 +343,83 @@ class ProcessedMessageRow(Base):
     message_id: Mapped[str] = mapped_column(Text, primary_key=True)
     wa_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+# ---------------------------------------------------------------------------
+# Trader ledger (additive, migration d4b8e3a2f1c7)
+# ---------------------------------------------------------------------------
+
+
+class TradeProductRow(Base):
+    """One item in a trader's catalogue.
+
+    Written only for consented users (the trade flow only runs for them).
+    ``name_key`` is the normalised name used to find the item again
+    ("Bags of Rice" -> "rice").
+    """
+
+    __tablename__ = "trade_products"
+    __table_args__ = (
+        UniqueConstraint("wa_id", "name_key", name="uq_trade_products_wa_id_name_key"),
+        Index("ix_trade_products_wa_id", "wa_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    wa_id: Mapped[str] = mapped_column(Text, ForeignKey("users.wa_id"), nullable=False)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    name_key: Mapped[str] = mapped_column(Text, nullable=False)
+    unit: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cost_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    set_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    stock_qty: Mapped[float] = mapped_column(
+        Numeric(14, 3), nullable=False, server_default=text("0"), default=0
+    )
+    low_stock_level: Mapped[float] = mapped_column(
+        Numeric(14, 3), nullable=False, server_default=text("3"), default=3
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class TradeEntryRow(Base):
+    """One ledger line: a sale or a restock, with the prices at that moment.
+
+    Prices are copied onto the row so later price changes never rewrite old
+    records. ``profit`` and ``price_difference`` are only set for sales.
+    """
+
+    __tablename__ = "trade_entries"
+    __table_args__ = (
+        Index("ix_trade_entries_wa_id_created_at", "wa_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    wa_id: Mapped[str] = mapped_column(Text, ForeignKey("users.wa_id"), nullable=False)
+    product_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("trade_products.id"), nullable=True
+    )
+    product_name: Mapped[str] = mapped_column(Text, nullable=False)
+    unit: Mapped[str | None] = mapped_column(Text, nullable=True)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)  # sale | restock
+    qty: Mapped[float] = mapped_column(Numeric(14, 3), nullable=False)
+    unit_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    unit_cost: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    set_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    amount: Mapped[float] = mapped_column(Numeric(16, 2), nullable=False)
+    profit: Mapped[float] = mapped_column(
+        Numeric(16, 2), nullable=False, server_default=text("0"), default=0
+    )
+    price_difference: Mapped[float] = mapped_column(
+        Numeric(16, 2), nullable=False, server_default=text("0"), default=0
+    )
+    stock_after: Mapped[float] = mapped_column(Numeric(14, 3), nullable=False)
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)  # voice | text
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
